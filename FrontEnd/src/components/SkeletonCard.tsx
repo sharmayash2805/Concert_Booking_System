@@ -1,5 +1,5 @@
 const SkeletonCard = () => (
-  <div className="rounded-xl overflow-hidden bg-card border border-border/50 animate-pulse">
+  <div className="overflow-hidden border-2 border-ink bg-paper">
     <div className="aspect-[16/10] bg-secondary" />
     <div className="p-5 space-y-3">
       <div className="h-5 bg-secondary rounded w-3/4" />

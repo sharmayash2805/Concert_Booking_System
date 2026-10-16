@@ -1,14 +1,13 @@
-import { cn } from "@/lib/utils";
-import { Minus, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import type { KeyboardEvent } from "react";
+import Glyph from "@/components/Glyph";
 
 export interface Zone {
   id: string;
+  position: "front-fan" | "left-fan" | "right-fan" | "away-fan";
   name: string;
   price: number;
-  color: string;
-  glowColor: string;
   available: number;
+  total: number;
 }
 
 interface ZoneMapProps {
@@ -19,146 +18,99 @@ interface ZoneMapProps {
   onQuantityChange: (delta: number) => void;
 }
 
-const ZoneMap = ({ zones, selectedZone, quantity, onZoneSelect, onQuantityChange }: ZoneMapProps) => {
-  const zoneMap: Record<string, Zone> = {};
-  zones.forEach((z) => (zoneMap[z.id] = z));
+const mapPoints: Record<Zone["position"], string> = {
+  "front-fan": "M218 111 H502 L472 209 H248 Z",
+  "left-fan": "M70 145 H203 L229 348 L95 378 Z",
+  "right-fan": "M517 145 H650 L625 378 L491 348 Z",
+  "away-fan": "M244 220 H476 L454 387 H266 Z",
+};
 
-  const selected = selectedZone ? zoneMap[selectedZone] : null;
+const ZoneMap = ({ zones, selectedZone, quantity, onZoneSelect, onQuantityChange }: ZoneMapProps) => {
+  const selected = zones.find((zone) => zone.id === selectedZone) ?? null;
+  const zoneAt = (position: Zone["position"]) => zones.find((zone) => zone.position === position);
+  const availabilityOpacity = (zone: Zone) => Math.max(0.25, zone.available / Math.max(1, zone.total));
+
+  const activateOnKey = (event: KeyboardEvent<SVGPathElement>, zone: Zone | undefined) => {
+    if (zone && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      onZoneSelect(zone.id);
+    }
+  };
+
+  const zonePath = (position: Zone["position"], label: string) => {
+    const zone = zoneAt(position);
+    if (!zone) return null;
+    const selectedPath = zone.id === selectedZone;
+    return (
+      <g key={zone.id}>
+        <path
+          d={mapPoints[position]}
+          role="button"
+          tabIndex={0}
+          aria-label={`${zone.name}, ${zone.available} of ${zone.total} tickets available, ₹${zone.price}`}
+          aria-pressed={selectedPath}
+          onClick={() => onZoneSelect(zone.id)}
+          onKeyDown={(event) => activateOnKey(event, zone)}
+          fill={selectedPath ? "var(--vermilion)" : "var(--ink)"}
+          fillOpacity={selectedPath ? 1 : availabilityOpacity(zone)}
+          stroke="var(--ink)"
+          strokeWidth="3"
+          className="venue-zone"
+        />
+        <text x={position === "left-fan" ? 145 : position === "right-fan" ? 575 : 360} y={position === "front-fan" ? 168 : position === "away-fan" ? 298 : 268} className="venue-label" textAnchor="middle" pointerEvents="none">
+          {label}
+        </text>
+        <text x={position === "left-fan" ? 145 : position === "right-fan" ? 575 : 360} y={position === "front-fan" ? 190 : position === "away-fan" ? 323 : 290} className="venue-count" textAnchor="middle" pointerEvents="none">
+          {zone.available} LEFT
+        </text>
+      </g>
+    );
+  };
 
   return (
-    <div className="space-y-8">
-      {/* Venue Map */}
-      <div className="relative max-w-2xl mx-auto space-y-3">
-        {/* Stage */}
-        <div className="mx-auto w-3/4 py-4 rounded-xl bg-muted/40 border border-border/50 text-center">
-          <span className="text-xs font-bold tracking-[0.3em] uppercase text-muted-foreground">Stage</span>
+    <div className="space-y-6">
+      <div className="venue-plan border-y-2 border-ink py-4">
+        <svg viewBox="0 0 720 430" role="group" aria-label="Interactive venue seating plan" className="mx-auto block w-full max-w-3xl">
+          <rect x="230" y="20" width="260" height="68" fill="var(--ink)" />
+          <text x="360" y="62" className="stage-label" textAnchor="middle">STAGE</text>
+          {zonePath("front-fan", "PIT")}
+          {zonePath("left-fan", "LEFT")}
+          {zonePath("right-fan", "RIGHT")}
+          {zonePath("away-fan", "BACK")}
+        </svg>
+        <div className="mt-3 flex justify-center gap-6 font-mono-ticket text-xs uppercase">
+          <span><i className="mr-2 inline-block h-3 w-3 bg-vermilion align-middle" />Selected</span>
+          <span><i className="mr-2 inline-block h-3 w-3 border border-ink bg-ink/40 align-middle" />Live availability</span>
         </div>
-
-        {/* Singer Area */}
-        <div className="mx-auto w-1/2 py-3 rounded-lg bg-muted/20 border border-border/30 text-center">
-          <span className="text-[11px] font-medium tracking-widest uppercase text-muted-foreground/70">Singer Area</span>
-        </div>
-
-        {/* Front Fan Zone */}
-        <ZoneBlock
-          zone={zoneMap["front-fan"]}
-          isSelected={selectedZone === "front-fan"}
-          onClick={() => onZoneSelect("front-fan")}
-          className="mx-auto w-3/4"
-        />
-
-        {/* Left + Right Fan Zones */}
-        <div className="grid grid-cols-2 gap-3">
-          <ZoneBlock
-            zone={zoneMap["left-fan"]}
-            isSelected={selectedZone === "left-fan"}
-            onClick={() => onZoneSelect("left-fan")}
-          />
-          <ZoneBlock
-            zone={zoneMap["right-fan"]}
-            isSelected={selectedZone === "right-fan"}
-            onClick={() => onZoneSelect("right-fan")}
-          />
-        </div>
-
-        {/* Away Fan Zone */}
-        <ZoneBlock
-          zone={zoneMap["away-fan"]}
-          isSelected={selectedZone === "away-fan"}
-          onClick={() => onZoneSelect("away-fan")}
-          className="mx-auto w-full"
-        />
       </div>
 
-      {/* Quantity Selector */}
       {selected && (
-        <div className="glass rounded-2xl p-6 max-w-md mx-auto animate-scale-in space-y-4">
+        <div className="mx-auto max-w-md border-2 border-ink bg-paper p-5 print-shadow-sm space-y-4">
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">Selected Zone</p>
-            <p className="text-lg font-bold text-foreground">{selected.name}</p>
-            <p className="text-sm text-primary font-medium">₹{selected.price.toLocaleString()} per ticket</p>
-            <p className="text-xs text-muted-foreground mt-1">{selected.available} tickets available</p>
+            <p className="font-mono-ticket text-xs uppercase tracking-widest">Selected Zone</p>
+            <p className="font-display text-2xl uppercase">{selected.name}</p>
+            <p className="font-mono-ticket text-sm">₹{selected.price.toLocaleString("en-IN")} / ticket</p>
+            <p className="font-mono-ticket text-xs">{selected.available} of {selected.total} available</p>
           </div>
-
-          <div className="flex items-center justify-center gap-4">
-            <Button
-              variant="secondary"
-              size="icon"
-              onClick={() => onQuantityChange(-1)}
-              disabled={quantity <= 1}
-              className="rounded-full h-10 w-10"
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-            <span className="text-3xl font-bold text-foreground w-12 text-center">{quantity}</span>
-            <Button
-              variant="secondary"
-              size="icon"
-              onClick={() => onQuantityChange(1)}
-              disabled={quantity >= selected.available}
-              className="rounded-full h-10 w-10"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
+          <div className="flex items-center justify-center gap-5">
+            <button type="button" className="h-10 w-10 border-2 border-ink text-2xl leading-none" onClick={() => onQuantityChange(-1)} disabled={quantity <= 1} aria-label="Remove one ticket"><Glyph name="minus" /></button>
+            <span className="w-12 text-center font-mono-ticket text-2xl">{quantity}</span>
+            <button type="button" className="h-10 w-10 border-2 border-ink text-2xl leading-none" onClick={() => onQuantityChange(1)} disabled={quantity >= Math.min(selected.available, 6)} aria-label="Add one ticket"><Glyph name="plus" /></button>
           </div>
-
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">Total</p>
-            <p className="text-2xl font-bold gradient-text">₹{(selected.price * quantity).toLocaleString()}</p>
+          <div className="border-t-2 border-dashed border-ink pt-3 text-center">
+            <p className="font-mono-ticket text-xs uppercase">Total</p>
+            <p className="font-display text-3xl">₹{(selected.price * quantity).toLocaleString("en-IN")}</p>
           </div>
         </div>
       )}
 
-      {/* Legend */}
-      <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
-        {zones.map((z) => (
-          <div key={z.id} className="flex items-center gap-2">
-            <div className={cn("w-4 h-4 rounded", z.color)} />
-            <span>{z.name} — ₹{z.price.toLocaleString()}</span>
-          </div>
+      <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 font-mono-ticket text-xs uppercase">
+        {zones.map((zone) => (
+          <span key={zone.id}>{zone.position === "front-fan" ? "Pit" : zone.position === "away-fan" ? "Back" : zone.position.replace("-fan", "")} · ₹{zone.price.toLocaleString("en-IN")}</span>
         ))}
       </div>
     </div>
   );
 };
-
-function ZoneBlock({
-  zone,
-  isSelected,
-  onClick,
-  className,
-}: {
-  zone: Zone;
-  isSelected: boolean;
-  onClick: () => void;
-  className?: string;
-}) {
-  if (!zone) return null;
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "relative py-6 rounded-xl border-2 text-center transition-all duration-300 cursor-pointer group",
-        isSelected
-          ? `${zone.color} border-transparent shadow-lg scale-[1.02]`
-          : "bg-secondary/40 border-border/40 hover:border-border hover:bg-secondary/60",
-        isSelected && zone.glowColor,
-        className
-      )}
-    >
-      <p className={cn("font-bold text-sm", isSelected ? "text-primary-foreground" : "text-foreground")}>
-        {zone.name}
-      </p>
-      <p className={cn("text-xs mt-1", isSelected ? "text-primary-foreground/80" : "text-muted-foreground")}>
-        ₹{zone.price.toLocaleString()}
-      </p>
-      {isSelected && (
-        <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-accent flex items-center justify-center">
-          <span className="text-[10px] font-bold text-accent-foreground">✓</span>
-        </div>
-      )}
-    </button>
-  );
-}
 
 export default ZoneMap;

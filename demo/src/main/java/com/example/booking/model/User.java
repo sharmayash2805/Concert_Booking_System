@@ -1,10 +1,13 @@
 package com.example.booking.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "users")
 public class User {
 
@@ -14,6 +17,8 @@ public class User {
 
     private String name;
     private String email;
+
+    @JsonIgnore
     private String password;
     private String role; // USER / ADMIN
 }

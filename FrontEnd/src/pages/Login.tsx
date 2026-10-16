@@ -1,68 +1,88 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Mail, Lock, Music } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import Glyph from "@/components/Glyph";
+
+const loginSchema = z.object({
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const destination = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? "/dashboard";
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success("Login successful! Redirecting...");
+  const submit = async (values: LoginValues) => {
+    try {
+      await login(values.email, values.password);
+      toast.success("Signed in");
+      navigate(destination, { replace: true });
+    } catch {
+      toast.error("Email or password is incorrect");
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
-      <div className="absolute inset-0 gradient-bg opacity-10" />
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-primary/10 blur-3xl" />
-      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-neon-pink/10 blur-3xl" />
-
-      <div className="w-full max-w-md relative z-10 animate-scale-in">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="w-12 h-12 rounded-xl gradient-bg flex items-center justify-center glow-primary">
-              <Music className="w-6 h-6 text-primary-foreground" />
+            <div className="grid h-12 w-12 place-items-center border-2 border-ink bg-vermilion font-display text-2xl text-paper print-shadow-sm">
+              S
             </div>
           </Link>
-          <h1 className="text-3xl font-bold gradient-text">Welcome Back</h1>
+          <h1 className="font-display text-5xl">Welcome Back</h1>
           <p className="text-muted-foreground mt-2">Sign in to your account</p>
         </div>
 
-        <div className="glass rounded-2xl p-8 space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="border-2 border-ink bg-paper p-8 print-shadow space-y-6">
+          <form onSubmit={handleSubmit(submit)} className="space-y-5" noValidate>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Glyph name="mail" className="absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  aria-invalid={Boolean(errors.email)}
+                  {...register("email")}
                   className="pl-10 bg-secondary border-border/50 focus:border-primary"
                 />
               </div>
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Glyph name="lock" className="absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  aria-invalid={Boolean(errors.password)}
+                  {...register("password")}
                   className="pl-10 bg-secondary border-border/50 focus:border-primary"
                 />
               </div>
+              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
-            <Button variant="neon" className="w-full" type="submit">
+            <Button variant="default" className="w-full" type="submit" disabled={isSubmitting}>
               Sign In
             </Button>
           </form>

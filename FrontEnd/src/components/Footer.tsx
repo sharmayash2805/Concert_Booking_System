@@ -1,50 +1,31 @@
-import { Music, Github, Twitter, Instagram } from "lucide-react";
+import { Link } from "react-router-dom";
+import Glyph from "@/components/Glyph";
 
 const Footer = () => (
-  <footer className="border-t border-border/50 bg-card/30 mt-auto">
-    <div className="container mx-auto px-4 py-12">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center">
-              <Music className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold gradient-text">ConcertHub</span>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Your gateway to unforgettable live music experiences.
-          </p>
-        </div>
-        <div>
-          <h4 className="font-semibold mb-3 text-foreground">Quick Links</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="hover:text-primary transition-colors cursor-pointer">Browse Events</li>
-            <li className="hover:text-primary transition-colors cursor-pointer">My Bookings</li>
-            <li className="hover:text-primary transition-colors cursor-pointer">Help Center</li>
-          </ul>
-        </div>
-        <div>
-          <h4 className="font-semibold mb-3 text-foreground">Company</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="hover:text-primary transition-colors cursor-pointer">About Us</li>
-            <li className="hover:text-primary transition-colors cursor-pointer">Careers</li>
-            <li className="hover:text-primary transition-colors cursor-pointer">Press</li>
-          </ul>
-        </div>
-        <div>
-          <h4 className="font-semibold mb-3 text-foreground">Follow Us</h4>
-          <div className="flex gap-3">
-            {[Twitter, Instagram, Github].map((Icon, i) => (
-              <div key={i} className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all cursor-pointer">
-                <Icon className="w-4 h-4" />
-              </div>
-            ))}
-          </div>
-        </div>
+  <footer className="mt-auto border-t-2 border-ink bg-paper">
+    <div className="container mx-auto px-4 py-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-2">
+        <span className="font-display text-xl">Stubline</span>
       </div>
-      <div className="border-t border-border/50 mt-8 pt-6 text-center text-sm text-muted-foreground">
-        © 2026 ConcertHub. All rights reserved.
-      </div>
+      <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+        <Link to="/" className="hover:text-primary">Browse Events</Link>
+        <Link to="/dashboard" className="hover:text-primary">My Bookings</Link>
+        <Link to="/about" className="hover:text-primary">About</Link>
+        <Link to="/terms" className="hover:text-primary">Terms</Link>
+        <Link to="/privacy" className="hover:text-primary">Privacy</Link>
+      </nav>
+      <a
+        href="https://github.com/sharmayash2805/Concert_Booking_System"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Stubline source repository"
+        className="inline-flex items-center gap-2 font-mono-ticket text-sm text-ink hover:text-vermilion"
+      >
+        <Glyph name="ticket" /> Repository
+      </a>
+    </div>
+    <div className="border-t border-border/50 py-4 text-center text-xs text-muted-foreground">
+      © 2026 Stubline
     </div>
   </footer>
 );

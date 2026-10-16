@@ -1,0 +1,21 @@
+# IDE and editor state
+.idea/
+.vscode/
+*.iml
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Build outputs and dependencies
+**/target/
+**/node_modules/
+**/dist/
+
+# OS files
+.DS_Store
+Thumbs.db

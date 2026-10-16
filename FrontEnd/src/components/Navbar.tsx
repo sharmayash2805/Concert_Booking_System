@@ -1,29 +1,28 @@
 import { Link, useLocation } from "react-router-dom";
-import { Music, Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-
-const navItems = [
-  { label: "Home", path: "/" },
-  { label: "My Bookings", path: "/dashboard" },
-  { label: "Admin", path: "/admin" },
-];
+import { useAuth } from "@/context/AuthContext";
+import Glyph from "@/components/Glyph";
 
 const Navbar = () => {
   const location = useLocation();
+  const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navItems = [
+    { label: "Home", path: "/" },
+    ...(user ? [{ label: "My Bookings", path: "/dashboard" }] : []),
+    ...(user?.role === "ADMIN" ? [{ label: "Admin", path: "/admin" }] : []),
+  ];
   const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
   if (isAuthPage) return null;
 
   return (
-    <nav className="sticky top-0 z-50 glass border-b border-border/50">
+    <nav className="sticky top-0 z-50 border-b-2 border-ink bg-paper">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-lg gradient-bg flex items-center justify-center glow-primary transition-all duration-300 group-hover:scale-110">
-            <Music className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold gradient-text">ConcertHub</span>
+          <div className="grid h-9 w-9 place-items-center border-2 border-ink bg-vermilion font-display text-xl text-paper">S</div>
+          <span className="font-display text-2xl uppercase">Stubline</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
@@ -41,24 +40,29 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-2">
-          <Link to="/login">
-            <Button variant="neon-outline" size="sm" className="gap-2">
-              <User className="w-4 h-4" />
+          {user ? (
+              <Button variant="outline" size="sm" className="gap-2" onClick={logout}>
+              <Glyph name="logout" /> Sign Out
+            </Button>
+          ) : <Link to="/login">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Glyph name="user" />
               Login
             </Button>
-          </Link>
+          </Link>}
         </div>
 
         <button
-          className="md:hidden text-foreground"
+          className="md:hidden border-2 border-ink px-3 py-2 text-foreground"
           onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
         >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          <Glyph name={mobileOpen ? "close" : "menu"} className="text-xl" />
         </button>
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden glass border-t border-border/50 animate-fade-in">
+        <div className="md:hidden border-t-2 border-ink bg-paper">
           <div className="container mx-auto px-4 py-4 flex flex-col gap-2">
             {navItems.map((item) => (
               <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}>
@@ -70,11 +74,13 @@ const Navbar = () => {
                 </Button>
               </Link>
             ))}
-            <Link to="/login" onClick={() => setMobileOpen(false)}>
-              <Button variant="neon-outline" className="w-full gap-2">
-                <User className="w-4 h-4" /> Login
+            {user ? (
+              <Button variant="outline" className="w-full gap-2" onClick={() => { setMobileOpen(false); logout(); }}>
+                <Glyph name="logout" /> Sign Out
               </Button>
-            </Link>
+            ) : <Link to="/login" onClick={() => setMobileOpen(false)}>
+              <Button variant="outline" className="w-full gap-2"><Glyph name="user" /> Login</Button>
+            </Link>}
           </div>
         </div>
       )}
