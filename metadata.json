@@ -1,0 +1,9 @@
+{
+  "name": "ConcertHub - Live Concert Booking App",
+  "description": "Full-featured concert booking platform with real-time seat reservation, admin and user dashboards, interactive zone selection, and role-based access.",
+  "prompt": "Concert booking app with interactive zone seat selection, user and admin modes, and event management.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
